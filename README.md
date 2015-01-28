@@ -8,9 +8,10 @@ used in many devices, including the
 
 It assumes a 32-bit ANS Forth plus a handful of other words for interfacing.
 
-`gd2.fs` - the bindings
+`gd2.fs` contains the bindings themselves.
+There are notes at the beginning of the file on the required support words.
 
-`standard.fs` and `smoketest.fs` are a simple compile test.
+There is also a simple compile test.
 You can run it like this:
 
     gforth standard.fs smoketest.fs

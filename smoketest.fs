@@ -39,4 +39,10 @@
 : w@    uw@ ;
 
 s" gd2.fs" included
+: random 0 ;
+: noop ;
+s" mini-oof.fs" included
+s" demos/metaball.fs" included
+s" demos/snow.fs" included
+cr .( Compilation completed)
 bye
