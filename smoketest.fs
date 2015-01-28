@@ -42,9 +42,12 @@ s" gd2.fs" included
 : random 0 ;
 : noop ;
 s" mini-oof.fs" included
+
+s" demos/blobs.fs" included
 s" demos/fizz.fs" included
 s" demos/metaball.fs" included
 s" demos/snow.fs" included
 s" demos/widgets.fs" included
+
 cr .( Compilation completed)
 bye

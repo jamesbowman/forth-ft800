@@ -1,5 +1,9 @@
 \ Handheld: swapForth-specific handheld console driver.
-\ This module replaces regular 
+\ This module replaces the regular 'emit' and 'key' hooks
+\ that drive the FT800 as a portrait-orientation tty
+\ emulator.
+\ The soft-keyboard implementation uses the touchscreen.
+\
 
 : xyii ( x y i i -- )
     2swap

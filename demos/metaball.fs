@@ -26,7 +26,7 @@ object class
     method brightness   \ return brightness from center point
 end-class blob
 
-: rr ( n0 -- n1 ) \ n1 is a random number between 0 and n1
+: rr ( n0 -- n1 ) \ n1 is a random number between 0 and n0
     random um* nip
 ;
 
