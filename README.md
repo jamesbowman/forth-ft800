@@ -1,8 +1,7 @@
 # forth-ft800
-Forth bindings for the FTDI FT800/Gameduino2
 
 This is a Forth driver for the
-[FTDI FT800](http://www.ftdichip.com/Products/ICs/FT800.html), as
+[FTDI FT800](http://www.ftdichip.com/Products/ICs/FT800.html) GPU, as
 used in many devices, including the
 [Gameduino 2](http://gameduino.com).
 
