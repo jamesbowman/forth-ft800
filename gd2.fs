@@ -1094,7 +1094,7 @@ hex
     5 GD.REG_PCLK           GD.c!
 
     \ 3 GD.REG_SWIZZLE        GD.c!     \ Gameduino2 needs these
-    \ 1 GD.REG_ROTATE         GD.c!
+    1 GD.REG_ROTATE         GD.c!
 
     083 GD.REG_GPIO_DIR     GD.c!
     080 GD.REG_GPIO         GD.c!
