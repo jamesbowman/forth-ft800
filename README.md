@@ -9,6 +9,7 @@ It assumes a 32-bit ANS Forth plus a handful of other words for interfacing.
 
 `gd2.fs` contains the bindings themselves.
 There are notes at the beginning of the file on the required support words.
+`smoketest.fs` includes some reference implementations of the support words.
 
 There is also a simple compile test.
 You can run it like this:
