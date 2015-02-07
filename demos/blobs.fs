@@ -2,10 +2,6 @@
 \ "Gameduino 2: Tutorial, Reference and Cookbook"
 \
 
-: rr ( n0 -- n1 ) \ n1 is a random number between 0 and n0
-    random um* nip
-;
-
 -16384 -16384 2constant OFFSCREEN
 
 128 constant NBLOBS
@@ -15,8 +11,7 @@ create xys NBLOBS 2* cells allot
 
 : blobs
     GD.init
-    GD.REG_TOUCH_TRANSFORM_A 24 GD.cmd_memwrite
-    442 GD.c 67773 GD.c 128238 GD.c -69606 GD.c -257 GD.c 17998943 GD.c
+    GD.calibrate
 
     NBLOBS 0 do
         OFFSCREEN i xy[] 2!

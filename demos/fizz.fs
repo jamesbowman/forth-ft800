@@ -2,9 +2,13 @@
 \ "Gameduino 2: Tutorial, Reference and Cookbook"
 \
 
-: rr ( n0 -- n1 ) \ n1 is a random number between 0 and n0
-    random um* nip
-;
+\
+\ requires gd2.fs and:
+\
+\ randrange  ( u0 -- u1 ) \ u1 is a random number less than u0
+\
+
+: rr randrange ;
 
 : fizz
     GD.init
