@@ -68,6 +68,5 @@ marker xxx s" demos/metaball.fs"    included  xxx
 marker xxx s" demos/snow.fs"        included  xxx
 marker xxx s" demos/widgets.fs"     included  xxx
 
-words
 cr .( Compilation completed)
 bye

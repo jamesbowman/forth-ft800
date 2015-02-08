@@ -31,7 +31,7 @@
 \ 0 constant PCB_CRYSTAL
 \ 3 constant PCB_SWIZZLE
 \
-\ For other FT800 boards - for example FTDI's modules, use:
+\ For other FT800/801 boards (e.g. FTDI's modules) use:
 \
 \ 1 constant PCB_CRYSTAL
 \ 0 constant PCB_SWIZZLE
@@ -314,7 +314,8 @@ LOCALWORDS
     60 ms
 ;
 
-: measure_freq ( -- u ) \ attempt to measure the actual clock frequency
+: measureF ( -- u ) \ measure FT800's actual clock frequency
+    1 ms
     GD.REG_CLOCK GD.@
     10 ms
     GD.REG_CLOCK GD.@
@@ -326,8 +327,8 @@ LOCALWORDS
 : tune ( -- ) \ adjust the clock trim to get close to 48 MHz
     0 \ keep last-measured frequency on the stack
     32 0 do
-        i GD.REG_TRIM cr .s GD.c!
-        drop measure_freq dup LOW_FREQ_BOUND < if
+        i GD.REG_TRIM GD.c!
+        drop measureF dup LOW_FREQ_BOUND > if
             leave
         then
     loop
