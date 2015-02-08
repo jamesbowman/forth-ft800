@@ -18,6 +18,28 @@
 \ w@        ( a -- n )  signed 16-bit fetch
 \
 
+
+\ Board-configuration options
+\ ---------------------------
+\
+\ PCB_CRYSTAL is true if the FT800 is using an external
+\ crystal.
+\ PCB_SWIZZLE specifies the RGB signal swapping.
+\
+\ For a Gameduino2 use:
+\
+\ 0 constant PCB_CRYSTAL
+\ 3 constant PCB_SWIZZLE
+\
+\ For other FT800 boards - for example FTDI's modules, use:
+\
+\ 1 constant PCB_CRYSTAL
+\ 0 constant PCB_SWIZZLE
+\
+
+0 constant PCB_CRYSTAL
+3 constant PCB_SWIZZLE
+
 hex
 
 \ FT800 is an SPI peripheral controlled by reads and writes
@@ -291,6 +313,27 @@ LOCALWORDS
     gd2-unsel
     60 ms
 ;
+
+: measure_freq ( -- u ) \ attempt to measure the actual clock frequency
+    GD.REG_CLOCK GD.@
+    10 ms
+    GD.REG_CLOCK GD.@
+    swap - 100 *
+;
+
+47040000 constant LOW_FREQ_BOUND
+
+: tune ( -- ) \ adjust the clock trim to get close to 48 MHz
+    0 \ keep last-measured frequency on the stack
+    32 0 do
+        i GD.REG_TRIM cr .s GD.c!
+        drop measure_freq dup LOW_FREQ_BOUND < if
+            leave
+        then
+    loop
+    GD.REG_FREQUENCY GD.!
+;
+
 
 variable wp             \ write pointer 0-4095
 variable room           \ how much space is in the command FIFO
@@ -1068,18 +1111,21 @@ decimal
 : GD.inputs.ptag        inputs 17 + c@ ;
 
 hex
-
 : GD.init  \ initialize the device
     gd2-spi-init
     gd2-unsel
 
     000 hostcmd     \ ACTIVE
-    044 hostcmd     \ CLKEXT
-    \ 62 hostcmd     \ CLK48M used for no-crystal parts like Gameduino2
+    PCB_CRYSTAL if
+        044 hostcmd     \ CLKEXT
+    else
+        062 hostcmd     \ CLK48M used for no-crystal parts like Gameduino2
+    then
     068 hostcmd     \ CORERST
 
-    \ GD.REG_ID GD.@ u. cr
-    \ GD.REG_CLOCK GD.@ u. cr
+    PCB_CRYSTAL 0= if
+        tune
+    then
 
     0 wp !
     stream
@@ -1093,7 +1139,7 @@ hex
     1 GD.REG_PCLK_POL       GD.c!
     5 GD.REG_PCLK           GD.c!
 
-    \ 3 GD.REG_SWIZZLE        GD.c!     \ Gameduino2 needs these
+    PCB_SWIZZLE GD.REG_SWIZZLE  GD.c!
     1 GD.REG_ROTATE         GD.c!
 
     083 GD.REG_GPIO_DIR     GD.c!
