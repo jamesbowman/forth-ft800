@@ -1,5 +1,5 @@
 GD.init
-include demos/frogger_assets.fs
+s" demos/frogger_assets.fs" included
 
 1 constant CONTROL_LEFT
 2 constant CONTROL_RIGHT
@@ -346,6 +346,7 @@ lookup die_anim
     lives @ 0 ?do
         i 8 * 240 LIFE_HANDLE 0 GD.Vertex2ii
     loop
+    depth throw
 
     GD.swap
 
@@ -438,9 +439,8 @@ lookup die_anim
 ;
 
 : frogger
-    GD.REG_TOUCH_TRANSFORM_A 24 GD.cmd_memwrite
-    \ 442 GD.c 67773 GD.c 128238 GD.c -69606 GD.c -257 GD.c 17998943 GD.c
-    2186 GD.c -66032 GD.c 30844839 GD.c 70571 GD.c -1348 GD.c -909177 GD.c
+    GD.init
+    GD.calibrate
 
     game_setup
     begin

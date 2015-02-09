@@ -1,9 +1,10 @@
 \ Converted from FTDI's 'metaball' sample
 \
-\ assumes a 32-bit ANS Forth plus:
+\ requires gd2.fs and:
 \
-\ random ( -- x )   returns a random 32-bit number
 \ mini-oof.fs       tiny object-oriented library
+\
+\ randrange  ( u0 -- u1 ) \ u1 is a random number less than u0
 \
 
 31                      constant w
@@ -26,12 +27,10 @@ object class
     method brightness   \ return brightness from center point
 end-class blob
 
-: rr ( n0 -- n1 ) \ n1 is a random number between 0 and n0
-    random um* nip
-;
+: rr randrange ;
 
 : rvel  ( -- n ) \ n is a random velocity
-    random 511 and 256 -
+    512 randrange 256 -
 ;
 
 :noname

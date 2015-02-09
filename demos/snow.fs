@@ -1,3 +1,12 @@
+\ Fill the screen with random 'snow'
+\
+
+\
+\ requires gd2.fs and:
+\
+\ randrange  ( u0 -- u1 ) \ u1 is a random number less than u0
+\
+
 : snow
     GD.init
 
@@ -10,7 +19,7 @@
     loop
 
     begin
-        $40000 480 272 * - rr GD.BitmapSource
+        $40000 480 272 * - randrange GD.BitmapSource
         GD.Clear
         GD.BITMAPS GD.Begin
         0 0 0 0 GD.Vertex2ii
