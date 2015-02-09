@@ -1,5 +1,6 @@
 GD.init
 s" demos/frogger_assets.fs" included
+\ s" frogger_assets.fs" included
 
 1 constant CONTROL_LEFT
 2 constant CONTROL_RIGHT
@@ -72,27 +73,21 @@ variable time
     swap 16 + swap
 ;
 
-: turtleanim
+: turtleanim  ( -- u ) \ the current turtle animation frame
     t 5 rshift 3 mod 50 +
 ;
 
-: turtle3  ( x y -- )
+: turtle3  ( x y -- ) \ draw three turtles
     turtleanim >r
     2dup r@ sprite
     r1 2dup r@ sprite
     r1 r> sprite
 ;
 
-: turtle2  ( x y -- )
+: turtle2  ( x y -- ) \ draw two turtles
     turtleanim >r
     2dup r@ sprite
     swap 16 + swap r> sprite
-;
-
-: log1  ( x y -- )
-    2dup            86 sprite
-    r1 2dup         87 sprite
-    r1              88 sprite
 ;
 
 : log ( length x y -- )
@@ -113,13 +108,9 @@ variable time
     endcase
 ;
 
-: F16
-    16 lshift
-;
-
-: rotate_around ( x y a -- )
+: rotate_around ( x y a -- ) \ rotate sprite around (x, y)
     >r
-    swap F16 swap F16
+    swap 65536 * swap 65536 *
     GD.cmd_loadidentity
     2dup GD.cmd_translate
     r> GD.cmd_rotate
@@ -396,7 +387,6 @@ create die_anim
     GD.calibrate
 
     game_setup
-    1 done c!
     begin
         gameloop
     again
