@@ -7,11 +7,9 @@ s" demos/frogger_assets.fs" included
 4 constant CONTROL_UP
 8 constant CONTROL_DOWN
 
-: draw_score ( x y n -- )
-    >r
-    swap 8 * swap 8 *
-    FONT_HANDLE 5 r>
-    GD.cmd_number
+: lookup \ a byte lookup table
+    create
+    does> + c@
 ;
 
 \ Game variables
@@ -27,7 +25,8 @@ variable score
 variable hiscore        0 hiscore !
 variable lives 
 create done 5 allot
-create homes 24 c, 72 c, 120 c, 168 c, 216 c,
+
+lookup homes 24 c, 72 c, 120 c, 168 c, 216 c,
 variable time
 
 : frog_start
@@ -56,6 +55,12 @@ variable time
   frog_start
 ;
 
+: draw_score ( x y n -- )
+    >r
+    swap 8 * swap 8 *
+    FONT_HANDLE 5 r>
+    GD.cmd_number
+;
 
 : sprite  ( x y anim -- )
     >r
@@ -87,7 +92,7 @@ variable time
 : turtle2  ( x y -- ) \ draw two turtles
     turtleanim >r
     2dup r@ sprite
-    swap 16 + swap r> sprite
+    r1 r> sprite
 ;
 
 : log ( length x y -- )
@@ -108,8 +113,33 @@ variable time
     endcase
 ;
 
-: rotate_around ( x y a -- ) \ rotate sprite around (x, y)
-    >r
+: squarewave ( note amp -- )  \ continuous MIDI note, amp 0-255
+    GD.REG_VOL_SOUND GD.c!
+    8 lshift 1 or GD.REG_SOUND GD.!
+    1 GD.REG_PLAY GD.c!
+;
+
+: sound
+    dying @ if
+        84 dying @ 2/ -
+        100
+    else
+        leaping @ if
+            leaping @ 2 and 0<> 12 and 60 +
+            100
+        else
+            0 0
+        then
+    then
+    squarewave
+;
+
+: silence
+    0 GD.REG_VOL_SOUND GD.c!
+;
+
+: rotate_around ( x y a -- ) \ rotate sprite a degrees around (x,y)
+    14 lshift >r
     swap 65536 * swap 65536 *
     GD.cmd_loadidentity
     2dup GD.cmd_translate
@@ -118,7 +148,7 @@ variable time
     GD.cmd_setmatrix
 ;
 
-: GD.touch
+: GD.touching
     GD.inputs.x -32768 <>
 ;
 
@@ -129,6 +159,7 @@ variable time
 ;
 
 : game_over
+    silence
     60 0 do
         GD.Clear
         \ Draw "F R O G G E R" using the sprites 90-94
@@ -149,8 +180,8 @@ variable time
 
         GD.swap
     loop
-    begin GD.getinputs GD.touch until
-    begin GD.getinputs GD.touch 0= until
+    begin GD.getinputs GD.touching until
+    begin GD.getinputs GD.touching 0= until
 ;
 
 : padx ( i - x )
@@ -165,30 +196,30 @@ variable time
     CONTROL_RIGHT GD.Tag
     2 padx 1 pady ARROW_HANDLE 0 GD.Vertex2ii
 
-    24 24 $4000 3 * rotate_around
+    24 24 3 rotate_around
     CONTROL_UP GD.Tag
     1 padx 0 pady ARROW_HANDLE 0 GD.Vertex2ii
 
-    24 24 $4000 2 * rotate_around
+    24 24 2 rotate_around
     CONTROL_LEFT GD.Tag
     0 padx 1 pady ARROW_HANDLE 0 GD.Vertex2ii
 
-    24 24 $4000 1 * rotate_around
+    24 24 1 rotate_around
     CONTROL_DOWN GD.Tag
     1 padx 2 pady ARROW_HANDLE 0 GD.Vertex2ii
 ;
 
-create frog_anim
+lookup frog_anim
     2 c, 1 c, 0 c, 0 c, 2 c,
-create die_anim
+lookup die_anim
     31 c, 32 c, 33 c, 30 c,
 
 : drawfrog \ draw the frog himself, or his death animation
     frogx @ frogy @
     dying @ 0= if
-        leaping @ 2/ frog_anim + c@
+        leaping @ 2/ frog_anim
     else
-        dying @ 16 / die_anim + c@
+        dying @ 16 / die_anim
     then
     sprite
 ;
@@ -220,7 +251,7 @@ create die_anim
     \ Completed homes
     5 0 do
         done i + c@ if
-            homes i + c@ 40 63 sprite
+            i homes 40 63 sprite
         then
     loop
 
@@ -276,6 +307,7 @@ create die_anim
     70 +loop
 
     0 GD.TagMask
+    frogface @ 8 8 rotate_around
     drawfrog
 
     t to prevt
@@ -286,6 +318,7 @@ create die_anim
         die
     then
 
+    \ Draw 'time remaining' by clearing a black rectangle
     GD.SaveContext
     72 248 GD.ScissorXY
     120 time @ 7 rshift - 8 GD.ScissorSize
@@ -293,34 +326,6 @@ create die_anim
     GD.RestoreContext
 
     1 GD.TagMask
-
-    depth throw
-
-    GD.touch GD.inputs.tag and >r
-    r@ 0<>
-    dying @ 0= and
-    leaping @ 0= and if
-        r@ frogdir !
-        1 leaping !
-        10 score +!
-    else
-        leaping @ 0<> if
-            leaping @ 9 < if
-                frogdir @ case
-                CONTROL_LEFT    of -2 frogx endof
-                CONTROL_RIGHT   of  2 frogx endof
-                CONTROL_UP      of -2 frogy endof
-                CONTROL_DOWN    of  2 frogy endof
-                endcase
-                +!
-                0 frogface !
-                1 leaping +!
-            else
-                0 leaping !
-            then
-        then
-    then
-    r> drop
 
     GD.RestoreContext
     GD.SaveContext
@@ -338,14 +343,38 @@ create die_anim
     lives @ 0 ?do
         i 8 * 240 LIFE_HANDLE 0 GD.Vertex2ii
     loop
+    depth throw
 
-    \ GD.inputs.x GD.inputs.y 31 0 s" @" GD.cmd_text
     GD.swap
+
+    GD.touching GD.inputs.tag and >r
+    r@ 0<>
+    dying @ 0= and
+    leaping @ 0= and if
+        r@ frogdir !
+        1 leaping !
+        10 score +!
+    else
+        leaping @ 0<> if
+            leaping @ 9 < if
+                frogdir @ case
+                CONTROL_LEFT    of 3 -2 frogx endof
+                CONTROL_RIGHT   of 1  2 frogx endof
+                CONTROL_UP      of 0 -2 frogy endof
+                CONTROL_DOWN    of 2  2 frogy endof
+                endcase
+                +! frogface !
+                1 leaping +!
+            else
+                0 leaping !
+            then
+        then
+    then
+    r> drop
 
     dying @ if
         1 dying +!
         dying @ 64 = if
-            cr ." ---- DIE ----"
             -1 lives +!
             lives @ 0= time @ 0= or if
                 game_over
@@ -361,7 +390,7 @@ create die_anim
             \ GD.inputs.ptag cr .
             frogy @ 128 > if \ road section
                 touching if
-                    die cr ." splat"
+                    die
                 then
             else
                 frogy @ 40 > if \ river section
@@ -372,14 +401,38 @@ create die_anim
                             frogy @ prevt riverat
                             - frogx +!
                         else
-                            die cr ." splash"
+                            die
                         then
                     then
-                else
+                else \ riverbank
+                    false
+                    5 0 do
+                        done i + c@ 0=
+                        i homes frogx @ - abs 4 < and if
+                            1 done i + c!
+                            10 score +!
+                            1+
+                        then
+                    loop
+                    if
+                        true 5 0 do
+                            done i + c@ and
+                        loop
+                        if
+                            level_start
+                        else
+                            frog_start
+                        then
+                    else
+                        die
+                    then
                 then
             then
         then
     then
+
+    sound
+    score @ hiscore @ max hiscore !
 ;
 
 : frogger
