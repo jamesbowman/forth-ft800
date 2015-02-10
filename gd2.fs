@@ -418,17 +418,27 @@ create inputs 18 allot  \ sampled touch inputs
     >r ii r> >gd
 ;
 
+\ s>gd appends a string to the command buffer, appends a
+\ zero byte, and pads to the next 32-bit boundary.  It
+\ iterates through the string, ORing the characters into the
+\ 32-bit accumulator on top-of-stack. Every fourth character,
+\ it sends the word to the hardware, and clears the
+\ accumulator. After the loop, it flushes the partially-filled
+\ accumulator to the hardware.
+
 : s>gd   ( caddr u -- ) \ send string to the command buffer
-     0 swap
-     0 ?do
-        ( caddr u32 )
-        over i + c@ i 8 * lshift or
-        i 3 and 3 = if
+     0 swap 0           ( caddr 0 u 0 )
+     ?do
+                        ( caddr u32 )
+        i 3 and >r
+        over i + c@     ( caddr u32 byte )
+        r@ 3 lshift lshift or
+        r> 3 = if
             >gd
             0
         then
     loop
-    >gd
+    >gd                 ( caddr )
     drop
 ;
 
@@ -1179,27 +1189,34 @@ decimal
     1 GD.REG_PLAY GD.!
 ;
 
-: GD.dump  ( a u -- ) \ dump GD memory
+DONEWORDS
+
+: (GD.dump)  ( caddr -- caddr' ) \ dump one line of FT800 RAM
+    cr dup dup 
+    0 <# # # # # # # #> type 
+    space space
+    16 0 do
+        dup GD.c@ 0 <# # # #> 
+        type space char+
+    loop
+    space swap
+    16 0 do
+        dup GD.c@ 127 and dup 0 bl within
+        over 127 = or
+        if drop [char] . then
+        emit char+
+    loop
+    drop
+;
+
+: GD.dump  ( a u -- ) \ dump FT800 memory, useful for debugging
     ?dup if
         base @ >r hex
         1- 16 / 1+
         0 do
-            cr dup dup 0 <# # # # # # # #> type space space
-            16 0 do
-                dup GD.c@ 0 <# # # #> type space char+
-            loop
-            space swap
-            16 0 do
-                dup GD.c@ 127 and dup 0 bl within
-                over 127 = or
-                if drop [char] . then
-                emit char+
-            loop
-            drop
+          (GD.dump)
         loop
         r> base !
     then
     drop
 ;
-
-DONEWORDS
