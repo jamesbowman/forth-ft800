@@ -21,9 +21,9 @@ create widths 128 allot
     widths + c@
 ;
 
-: loadfont
+: loadfont ( u -- )
     16 - 148 *
-    $ffffc GD.@ + >r
+    GD.ROM_FONTROOT GD.@ + >r
 
     \ GD.L8 480 272 GD.BitmapLayout
     \ GD.NEAREST GD.BORDER GD.BORDER 0 0 GD.BitmapSize
@@ -37,8 +37,6 @@ create widths 128 allot
     GD.BILINEAR GD.BORDER GD.BORDER
     r@ 140 + GD.@
     r@ 136 + GD.@   GD.BitmapSize
-
-    \ r@ 136 + GD.@ .  r@ 140 + GD.@ .
 
     r>
     128 0 do
