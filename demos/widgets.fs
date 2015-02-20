@@ -1,6 +1,10 @@
 \ Conversion of the 'widgets' sample from the
 \ "Gameduino 2: Tutorial, Reference and Cookbook"
 \
+\ This is an ANS Forth program:
+\   Requiring the Core Extensions word set
+\   Requiring the Facility Extensions word set
+\
 
 : v2   ( x y -- )
     0 0 GD.Vertex2ii

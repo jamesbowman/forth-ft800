@@ -1,9 +1,14 @@
 \ Conversion of the 'fizz' sample from the
 \ "Gameduino 2: Tutorial, Reference and Cookbook"
 \
-
 \
-\ requires gd2.fs and:
+\ This is an ANS Forth program:
+\   Requiring the Core Extensions word set
+\   Requiring the Facility Extensions word set
+\
+\
+\
+\ Requires gd2.fs and:
 \
 \ randrange  ( u0 -- u1 ) \ u1 is a random number less than u0
 \

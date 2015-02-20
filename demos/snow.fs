@@ -1,28 +1,34 @@
 \ Fill the screen with random 'snow'
 \
-
-\
 \ requires gd2.fs and:
 \
-\ randrange  ( u0 -- u1 ) \ u1 is a random number less than u0
+\ random  ( -- u ) \ u is a random number
 \
+\ This is an ANS Forth program:
+\   Requiring the Core Extensions word set
+\   Requiring the Facility Extensions word set
+\
+
+512 512 * constant ALLRAM
 
 : snow
     GD.init
 
-    GD.L8 480 272 GD.BitmapLayout
-    GD.NEAREST GD.BORDER GD.BORDER 0 0 GD.BitmapSize
+    GD.L8 512 512 GD.BitmapLayout
+    GD.NEAREST GD.REPEAT GD.REPEAT 480 272 GD.BitmapSize
 
-    0 $40000 GD.cmd_memwrite
-    $10000 0 do
+    0 ALLRAM GD.cmd_memwrite
+    ALLRAM 0 do
         random GD.c
-    loop
+    4 +loop
 
     begin
-        $40000 480 272 * - randrange GD.BitmapSource
+        random GD.BitmapTransformC
+        random GD.BitmapTransformF
         GD.Clear
         GD.BITMAPS GD.Begin
         0 0 0 0 GD.Vertex2ii
+        GD.RestoreContext
         240 136 31 GD.OPT_CENTER s" snow" GD.cmd_text
         GD.swap
     again

@@ -17,7 +17,11 @@
 \ uw@       ( a -- x )  unsigned 16-bit fetch
 \ w@        ( a -- n )  signed 16-bit fetch
 \
-
+\
+\ This is an ANS Forth program:
+\   Requiring the Core Extensions word set
+\   Requiring the Facility Extensions word set
+\
 
 \ Board-configuration options
 \ ---------------------------
@@ -1070,6 +1074,7 @@ hex
     027 cmd
     ii
 ;
+
 decimal
 
 \ #######   TOP-LEVEL COMMANDS   ##############################
@@ -1178,16 +1183,19 @@ decimal
     stream
 ;
 
+: GD.play  ( instrument note -- ) \ play a sound
+    unstream
+    8 lshift or
+    GD.REG_SOUND GD.!
+    1 GD.REG_PLAY GD.!
+    stream
+;
+
 \ FT800 memory access
 : GD.c!     unstream GD.c! stream ;
 : GD.c@     unstream GD.c@ stream ;
 : GD.@      unstream GD.@ stream ;
 : GD.!      unstream GD.! stream ;
-
-: GD.play  ( instrument note -- ) \ play a sound
-    8 lshift or
-    GD.REG_SOUND GD.!
-    1 GD.REG_PLAY GD.!
-;
+: GD.move   unstream GD.move stream ;
 
 DONEWORDS

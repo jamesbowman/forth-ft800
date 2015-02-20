@@ -1,4 +1,5 @@
 \ Mini-OOF                                                 12apr98py
+: noop ;
 : method ( m v "name" -- m' v ) Create  over , swap cell+ swap
   DOES> ( ... o -- ... ) @ over @ + @ execute ;
 : var ( m v size "name" -- m v' ) Create  over , +

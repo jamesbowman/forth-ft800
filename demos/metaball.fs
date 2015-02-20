@@ -6,6 +6,12 @@
 \
 \ randrange  ( u0 -- u1 ) \ u1 is a random number less than u0
 \
+\
+\ This is an ANS Forth program:
+\   Requiring the Core Extensions word set
+\   Requiring the Facility Extensions word set
+\   Requiring the String word set
+\
 
 31                      constant w
 18                      constant h

@@ -1,3 +1,13 @@
+\
+\ FROGGER - conversion from C to the FT800
+\
+\ This is an ANS Forth program:
+\   Requiring the Core Extensions word set
+\   Requiring the Exception word set
+\   Requiring the Facility Extensions word set
+\   Requiring the File Access word set
+\
+
 GD.init
 s" demos/frogger_assets.fs" included
 \ s" frogger_assets.fs" included
