@@ -35,6 +35,7 @@ variable time
 
 : pinwheel
     GD.init
+    0 time !
     begin
         GD.Clear
         $c0ffc0 GD.ColorRGB# 30.0e radius f! 30  wheel 
