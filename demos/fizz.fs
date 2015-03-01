@@ -17,14 +17,15 @@
 
 : fizz
     GD.init
+    GD.REG_HSIZE GD.@ 16 * GD.REG_VSIZE GD.@ 16 *   ( width height )
     begin
         GD.Clear
         GD.POINTS GD.Begin
-        100 0 do
+        200 0 do
             16 50 * rr GD.PointSize
             256 rr 256 rr 256 rr GD.ColorRGB
             256 rr GD.ColorA
-            480 rr 272 rr 0 0 GD.Vertex2ii
+            over rr over rr GD.Vertex2f
         loop
         GD.swap
     again
