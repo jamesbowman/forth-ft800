@@ -19,7 +19,7 @@ PI 2.0e f* fconstant 2PI
 ;
 
 variable radius
-variable time
+variable time 0 time !
 
 : wheel ( npoints -- )
     GD.LINE_STRIP GD.Begin
@@ -33,7 +33,7 @@ variable time
     fdrop fdrop
 ;
 
-: pinwheel
+: pinwheels
     GD.init
     0 time !
     begin

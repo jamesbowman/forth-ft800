@@ -22,6 +22,7 @@
 \   Requiring the Core Extensions word set
 \   Requiring the Facility Extensions word set
 \
+\  Environmental dependency on 32 bit arithmetic.
 
 \ Board configuration
 \ -------------------
