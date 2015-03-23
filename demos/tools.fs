@@ -16,19 +16,13 @@
     over + swap
 ;
 
-: ram>GD ( caddr u -- ) \ copy RAM to the FT800 command buffer
-    bounds ?do
-        i @ GD.c
-    4 +loop
-;
-
 : file>GD ( caddr u -- ) \ feed a file to the FT800 command buffer
     r/o open-file throw >r
     begin
         pad 512 r@ read-file throw
         ?dup
     while
-        pad swap ram>GD
+        pad swap GD.supply
     repeat
     r> close-file throw
 ;
@@ -132,7 +126,7 @@ decimal
 
 PUBLICWORDS     \ }{
 
-: GD.Screenshot
+: GD.screenshot
     GD.finish
     1 REG_SCREENSHOT_EN GD.c!
     GD.REG_PCLK GD.@
@@ -140,7 +134,7 @@ PUBLICWORDS     \ }{
     cr ." !screenshot"
     GD.REG_HSIZE GD.@ send32 GD.REG_VSIZE GD.@ send32
     GD.REG_VSIZE GD.@ 0 do
-        i REG_SCREENSHOT_Y GD.c!
+        i REG_SCREENSHOT_Y GD.!
         1 REG_SCREENSHOT_START GD.c!
         begin
             REG_SCREENSHOT_BUSY dup GD.@

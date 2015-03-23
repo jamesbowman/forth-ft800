@@ -24,26 +24,47 @@
 \
 \  Environmental dependency on 32 bit arithmetic.
 
-\ Board-configuration options
-\ ---------------------------
+\ Board configuration
+\ -------------------
 \
-\ PCB_CRYSTAL is true if the FT800 is using an external
-\ crystal.
-\ PCB_SWIZZLE specifies the RGB signal swapping.
+\ Depending on how the FT800 is hooked up, there may be
+\ some custom initialization required. This initialization
+\ includes:
+\   * crystal/no-crystal operation
+\   * screen rotation
+\   * RGB pin swizzle
+\   * LCD custom resolution/timing selection
 \
-\ For a Gameduino2 use:
+\ These options are selected by a custom initialization
+\ word, which is called by GD.init
 \
-\ 0 constant PCB_CRYSTAL
-\ 3 constant PCB_SWIZZLE
+\ This word calls GD.crystal or GD.nocrystal, then
+\ writes any registers needed for by the configuration,
+\ finally it should set up the LCD panel, using one of
+\ the predefined panel setup words.
 \
-\ For other FT800/801 boards (e.g. FTDI's modules) use:
+\ The default word is for Gameduino 2, and looks like:
 \
-\ 1 constant PCB_CRYSTAL
-\ 0 constant PCB_SWIZZLE
+\ : gameduino2
+\     GD.nocrystal
+\     3 GD.REG_SWIZZLE GD.c!
+\     1 GD.REG_ROTATE  GD.c!
+\     GD.480x272
+\ ;
+\ 
+\ For other FT800/801 boards (e.g. FTDI's modules) then the hardware
+\ defaults are fine, so a simpler word can be used:
 \
-
-0 constant PCB_CRYSTAL
-3 constant PCB_SWIZZLE
+\ : ftdi-eval
+\     GD.crystal
+\     GD.480x272
+\ ;
+\ 
+\ To set the custom word, give its xt to GD.setcustom *before*
+\ calling GD.init
+\ 
+\ ' ftdi-eval GD.setcustom
+\
 
 hex
 
@@ -352,12 +373,14 @@ create inputs 18 allot  \ sampled touch inputs
     
 : getspace  ( -- u )    \ u is the space in the command FIFO
     4092
-    wp @ GD.REG_CMD_READ GD.@ -
+    wp @ GD.REG_CMD_READ GD.@
+    dup 3 and 0<> 124 and throw
+    -
     mod4K -
 ;
 
 : gostream
-    GD.ram_cmd wp @ mod4K +
+    GD.RAM_CMD wp @ mod4K +
     GD.wa
 ;
 
@@ -447,6 +470,8 @@ create inputs 18 allot  \ sampled touch inputs
     >gd                 ( caddr )
     drop
 ;
+
+variable custom
 
 PUBLICWORDS
 
@@ -1133,17 +1158,27 @@ hex
     gd2-spi-init
     gd2-unsel
 
-    000 hostcmd     \ ACTIVE
-    PCB_CRYSTAL if
-        044 hostcmd     \ CLKEXT
-    else
-        062 hostcmd     \ CLK48M used for no-crystal parts like Gameduino2
-    then
-    068 hostcmd     \ CORERST
+    000 hostcmd         \ ACTIVE
 
-    PCB_CRYSTAL 0= if
-        tune
-    then
+    custom @ execute
+
+    unstream
+
+    083 GD.REG_GPIO_DIR     GD.c!
+    080 GD.REG_GPIO         GD.c!
+    stream
+;
+
+: common-init
+    \ cr
+    \ gd2-sel
+    \     10 spix hex2.
+    \     24 spix hex2.
+    \     00 spix hex2.
+    \     0 spix hex2.
+    \     0 spix hex2.
+    \     0 spix hex2.
+    \ gd2-unsel
 
     0 wp !
     stream
@@ -1152,18 +1187,23 @@ hex
     GD.Clear
 
     GD.swap
-    unstream
+;
 
-    1 GD.REG_PCLK_POL       GD.c!
-    5 GD.REG_PCLK           GD.c!
+: GD.nocrystal ( -- ) \ initialize the FT800 for no-crystal
+    062 hostcmd     \ CLK48M used for no-crystal parts like Gameduino2
+    068 hostcmd     \ CORERST
+    tune
+    common-init
+;
 
-    PCB_SWIZZLE GD.REG_SWIZZLE  GD.c!
-    1 GD.REG_ROTATE         GD.c!
+: GD.crystal ( -- ) \ initialize the FT800 for external crystal
+    044 hostcmd     \ CLKEXT, use external crystal
+    068 hostcmd     \ CORERST
+    common-init
+;
 
-    083 GD.REG_GPIO_DIR     GD.c!
-    080 GD.REG_GPIO         GD.c!
-
-    stream
+: GD.setcustom ( xt -- ) \ Set the custom initialization word
+    custom !
 ;
 
 decimal
@@ -1184,6 +1224,28 @@ decimal
     stream
 ;
 
+: GD.supply ( caddr u -- )    \ write blk to the command stream
+    aligned
+    begin
+        dup
+    while
+        room @
+        over min
+        ?dup
+        if
+            >r
+            r@ negate room +!
+            over r@ blk>spi
+            r@ wp +!
+            r> /string
+        else
+            unstream
+            stream
+        then
+    repeat
+    2drop
+;
+
 : GD.play  ( instrument note -- ) \ play a sound
     unstream
     8 lshift or
@@ -1200,3 +1262,22 @@ decimal
 : GD.move   unstream GD.move stream ;
 
 DONEWORDS
+
+: GD.480x272
+    1 GD.REG_PCLK_POL       GD.c!
+    5 GD.REG_PCLK           GD.c!
+;
+
+: gameduino2
+    GD.nocrystal
+    3 GD.REG_SWIZZLE GD.c!
+    1 GD.REG_ROTATE  GD.c!
+    GD.480x272
+;
+
+: ftdi-eval
+    GD.crystal
+    GD.480x272
+;
+
+' gameduino2 GD.setcustom
