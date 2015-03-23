@@ -399,7 +399,7 @@ create inputs 18 allot  \ sampled touch inputs
 ;
 
 : hh    ( h0 h1 -- )
-    16 lshift or >gd
+    16 lshift swap $ffff and or >gd
 ;
 
 : hhhh ( h0 h1 h2 h3 -- )
