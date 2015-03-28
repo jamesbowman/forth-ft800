@@ -147,6 +147,7 @@ PUBLICWORDS     \ }{
     loop
     0 REG_SCREENSHOT_EN GD.!
     GD.REG_PCLK GD.c!
+    key [char] k <> 100 and throw
 ;
 
 DONEWORDS       \ }
