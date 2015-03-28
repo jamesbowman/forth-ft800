@@ -28,6 +28,7 @@ message 40 char . fill
     message 39 + c!
 ;
 
+variable tt 0 tt !
 : widgets
     GD.init
 
@@ -35,6 +36,8 @@ message 40 char . fill
 
     0   \ keep previous key on stack
     begin
+        \ tt @ s>f 0.02e0 f* fsin 1.0e f+ 32767.0e0 f* f>s to val
+        1 tt +!
         GD.getinputs
         GD.inputs.track_tag TAG_DIAL TAG_TOGGLE 1+ within if
             GD.inputs.track_val to val
@@ -75,8 +78,8 @@ message 40 char . fill
         16 199 104 10 options val 65535 GD.cmd_slider 
 
         TAG_TOGGLE GD.Tag
-        360 62 80 29 options val s" that|this" GD.cmd_toggle
-        360 62 80 20 TAG_TOGGLE GD.cmd_track
+        360 62 80 29 options val s\" that\xFFthis" GD.cmd_toggle
+        360 62 60 20 TAG_TOGGLE GD.cmd_track
 
         255 GD.Tag
         68 136 30 GD.OPT_CENTER 5 or val GD.cmd_number 
