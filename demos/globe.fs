@@ -564,31 +564,20 @@ variable sz
 
 create linebuf 200 allot
 
-\ variable addterm
-\
-\ : renderline ( multerm addterm -- )
-\     addterm !
-\     200 0 do
-\         dup i loncos @ g*
-\         addterm @ +
-\         0 max g>s
-\         linebuf i + c!
-\     loop
-\     drop
-\ ;
+\ lights8 is a lighting table, indexed -128 to 127
 
-create linelup 256 allot
+here 256 allot 128 + constant lights8
+
 marker tmp
-    
-    linelup 256 255 fill
     :noname
-        128 0 do
-            i 5 * 255 min
+        128 -128 do
+            i
+            5 *
+            0 max 255 min
             invert
-            linelup i + c!
+            lights8 i + c!
         loop
     ; execute
-
 tmp
 
 code renderline  ( multerm addterm -- )
@@ -597,18 +586,14 @@ code renderline  ( multerm addterm -- )
     0 loncos r1 ldk,        \ r1: loncos pointer
     200 loncos r2 ldk,      \ r2: loncos limit
     linebuf r4 ldk,         \ r4: linebuf pointer
-    linelup r5 ldk,         \ r5: linelup pointer
+    lights8 r5 ldk,         \ r5: lights8 pointer
     begin
         0 r1 cc ldi,        \ fetch from loncos
         r0 cc cc mul,       \ * multerm
         15 # cc cc ashr,    \
         r3 cc cc add,       \ + addterm
-        8 # cc cc ashr,     \ g>s
+        8 # cc cc ashr,     \ g>s 2/
 
-        \ 31 2 1 if           \ clamp to 0 by checking hi bit of cc
-        \     0 cc ldk,
-        \ then
-        255 # cc cc and,
         r5 cc cc add,
         0 cc cc ldi.b,
         r4 0 cc sti.b,      \ store
@@ -621,23 +606,30 @@ code renderline  ( multerm addterm -- )
     ' drop jmp,
 end-code
 
+\ variable addterm
+\ 
+\ : renderline ( multerm addterm -- )
+\     addterm !
+\     200 0 do
+\         dup i loncos @ g*
+\         addterm @ +
+\         g>s 2/
+\         lights8 + c@
+\         linebuf i + c!
+\     loop
+\     drop
+\ ;
+
 : lightmap  ( F: dec -- ) \ compute lightmap, load to bitmap
     0.0e fswap degrees fnegate
     asvector f>g sz ! f>g sx !
 
     120 0 do
-        \ cr
-        \ [char] > emit space
-
         i latcos @ sx @ g*
         i latsin @ sz @ g*
         renderline
-        \ linebuf 200 bounds do
-        \     i c@ .
-        \ loop
         linebuf 200 GD.supply
     loop
-    \ cr
 ;
 
 : across ( x y dx -- x' y ) \ move dx pixels across
@@ -755,9 +747,9 @@ variable prevtag
         GD.RestoreContext
 
         2dup jdwhere2
-        ms@
+        \ ms@
         fover fover light
-        ms@ swap - cr .ms
+        \ ms@ swap - cr .ms
 
         \ Draw the Sun itself as 8 layered circles
         onmap
