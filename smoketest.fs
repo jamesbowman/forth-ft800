@@ -56,6 +56,11 @@
 : spi>
     0
 ;
+
+: blk>spi
+    2drop
+;
+
 s" gd2.fs" included
 : random 0 ;
 : randrange drop 0 ;
@@ -66,6 +71,7 @@ marker xxx s" demos/blobs.fs"       included  xxx
 marker xxx s" demos/fizz.fs"        included  xxx
 marker xxx s" demos/metaball.fs"    included  xxx
 marker xxx s" demos/snow.fs"        included  xxx
+: s\" postpone s" ; immediate
 marker xxx s" demos/widgets.fs"     included  xxx
 
 cr .( Compilation completed)
