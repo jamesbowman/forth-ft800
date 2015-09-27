@@ -80,9 +80,9 @@ create recip recipsz allot
 
 :noname ( i j blob -- u )
     >r
-    r@ y @ 256 / - dup * swap
-    r> x @ 256 / - dup *
-    + 3 rshift
+    8 lshift r@ y @ - dup * swap
+    8 lshift r> x @ - dup *
+    + 19 rshift
     recipsz 1- min
     recip + c@
 ; blob defines brightness
@@ -111,6 +111,7 @@ create recip recipsz allot
     GD.BILINEAR GD.BORDER GD.BORDER 480 272 GD.BitmapSize
 
     begin
+\ GD.finish clk@ 2>r
         GD.SaveContext
 
         \ Draw the background
@@ -139,20 +140,24 @@ create recip recipsz allot
         loop
 
         \ Build up a new w*h background image at pad
+        pad
         h 0 do
             w 0 do
                 i j 0 b[] brightness
                 i j 1 b[] brightness +
                 i j 2 b[] brightness +
                 255 min
-                pad j w * + i + c!
+                over c! 1+
             loop
         loop
+        drop
 
         \ Transfer it to graphics memory
         0 wh GD.cmd_memwrite
-        pad wh GD.s
+        pad wh GD.supply
+\ clk@ 2r> d- cr d.
 
         GD.swap
+\ GD.REG_FRAMES GD.@ .
     again
 ;

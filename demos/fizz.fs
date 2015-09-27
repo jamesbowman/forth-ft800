@@ -15,6 +15,7 @@
 
 : rr randrange ;
 
+16 50 * constant pointsize
 : fizz
     GD.init
     GD.REG_HSIZE GD.@ 16 * GD.REG_VSIZE GD.@ 16 *   ( width height )
@@ -22,9 +23,9 @@
         GD.Clear
         GD.POINTS GD.Begin
         200 0 do
-            16 50 * rr GD.PointSize
-            256 rr 256 rr 256 rr GD.ColorRGB
-            256 rr GD.ColorA
+            pointsize rr GD.PointSize
+            random GD.ColorRGB#
+            random GD.ColorA
             over rr over rr GD.Vertex2f
         loop
         GD.swap
