@@ -42,5 +42,9 @@
     0
 ;
 
+: blk>spi
+    2drop
+;
+
 : random 0 ;
 : randrange ;
