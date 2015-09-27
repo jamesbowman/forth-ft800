@@ -385,7 +385,7 @@ create inputs 18 allot  \ sampled touch inputs
 : getspace  ( -- u )    \ u is the space in the command FIFO
     4092
     wp @ GD.REG_CMD_READ GD.@
-    dup 3 and 0<> 124 and throw
+    dup 3 and 0<> 257 and throw
     -
     mod4K -
 ;
@@ -470,9 +470,9 @@ create inputs 18 allot  \ sampled touch inputs
      0 swap 0           ( caddr 0 u 0 )
      ?do
                         ( caddr u32 )
-        i 3 and >r
         over i + c@     ( caddr u32 byte )
-        r@ 3 lshift lshift or
+        i 3 and dup >r
+        3 lshift lshift or
         r> 3 = if
             >gd
             0
@@ -1131,7 +1131,12 @@ decimal
 
 : GD.calibrate  \ run the FT800's interactive calibration procedure
     GD.Clear
-    240 100 30 GD.OPT_CENTERX s" please tap on the dot" GD.cmd_text 
+    unstream
+    GD.REG_HSIZE GD.@ 2/
+    GD.REG_VSIZE GD.@ 3 10 */
+    30
+    stream
+    GD.OPT_CENTERX s" please tap on the dot" GD.cmd_text 
     GD.cmd_calibrate
     GD.finish
     GD.cmd_dlstart
@@ -1172,12 +1177,6 @@ hex
     000 hostcmd         \ ACTIVE
 
     custom @ execute
-
-    unstream
-
-    083 GD.REG_GPIO_DIR     GD.c!
-    080 GD.REG_GPIO         GD.c!
-    stream
 ;
 
 : common-init
@@ -1190,6 +1189,9 @@ hex
     \     0 spix hex2.
     \     0 spix hex2.
     \ gd2-unsel
+
+    080 GD.REG_GPIO_DIR     GD.c!
+    080 GD.REG_GPIO         GD.c!
 
     0 wp !
     stream
@@ -1264,6 +1266,8 @@ decimal
     1 GD.REG_PLAY GD.!
     stream
 ;
+
+: GD.wh  unstream GD.REG_HSIZE GD.@ GD.REG_VSIZE GD.@ stream ;
 
 \ FT800 memory access
 : GD.c!     unstream GD.c! stream ;
