@@ -13,12 +13,13 @@
 \   Requiring the String word set
 \
 
-31                      constant w
-18                      constant h
+51                      constant w
+31                      constant h
 80                      constant NBLOBS
 
-240 16 *    constant centerx
-136 16 *    constant centery
+0 value centerx
+0 value centery
+0 value scale
 
 w h *       constant wh
 
@@ -27,7 +28,8 @@ object class
     1 cells var y
     1 cells var dx
     1 cells var dy
-    method placement    \ random placement
+    method kick         \ randomize velocity
+    method born         \ randomize position, velocity
     method animate      \ compute new position
     method draw         \ draw self
     method brightness   \ return brightness from center point
@@ -41,11 +43,16 @@ end-class blob
 
 :noname
     >r
-    480 16 * rr r@ x !
-    272 16 * rr r@ y !
     rvel r@ dx !
     rvel r> dy !
-; blob defines placement
+; blob defines kick
+
+:noname
+    >r
+    centerx 2* rr r@ x !
+    centery 2* rr r@ y !
+    r> kick
+; blob defines born
 
 :noname
     dup x @
@@ -87,8 +94,15 @@ create recip recipsz allot
     recip + c@
 ; blob defines brightness
 
+
+: new ( class -- o )  align here over @ allot tuck ! ;
+
 : metaball
     GD.init
+    GD.REG_HSIZE GD.@ 2/ 16 * to centerx
+    GD.REG_VSIZE GD.@ 2/ 16 * to centery
+
+    GD.REG_HSIZE GD.@ 6 800 */ to scale
 
     \ Build the reciprocal table
     200 recip c!
@@ -97,21 +111,22 @@ create recip recipsz allot
         recip i + c!
     loop
 
+cr ." HERE "
+
     \ Create blobs at random locations
     NBLOBS 0 do
         blob new
         i cells bb + !
     loop
     NBLOBS 0 do
-        i b[] placement
+        i b[] born
     loop
 
     \ Background bitmap
     GD.L8 w h GD.BitmapLayout
-    GD.BILINEAR GD.BORDER GD.BORDER 480 272 GD.BitmapSize
+    GD.BILINEAR GD.BORDER GD.BORDER 0 0 GD.BitmapSize
 
     begin
-\ GD.finish clk@ 2>r
         GD.SaveContext
 
         \ Draw the background
@@ -130,7 +145,7 @@ create recip recipsz allot
         0 GD.ColorRGB#
         GD.POINTS GD.Begin
         NBLOBS 3 do
-            i 3 * GD.PointSize
+            i scale * GD.PointSize
             i b[] draw
         loop
 
@@ -138,6 +153,11 @@ create recip recipsz allot
         NBLOBS 0 do
             i b[] animate
         loop
+
+        \ Randomize one blob's velocity
+        10 randrange 0= if
+            NBLOBS randrange b[] kick
+        then
 
         \ Build up a new w*h background image at pad
         pad
@@ -155,9 +175,9 @@ create recip recipsz allot
         \ Transfer it to graphics memory
         0 wh GD.cmd_memwrite
         pad wh GD.supply
-\ clk@ 2r> d- cr d.
-
+        \ pad wh bounds do
+        \     i @ GD.c
+        \ 4 +loop
         GD.swap
-\ GD.REG_FRAMES GD.@ .
     again
 ;
