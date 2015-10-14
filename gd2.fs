@@ -1,14 +1,14 @@
 \ GD library: FT800 Forth interface
 \
 \ Assumes a 32-bit ANS Forth plus the following:
-\ 
+\
 \ LOCALWORDS PUBLICWORDS DONEWORDS
 \                       words in LOCAL section are only
 \                       visible between PUBLICWORDS and
 \                       DONEWORDS.
 \                       If your Forth lacks vocabularies,
 \                       ignore them.
-\ 
+\
 \ gd2-spi-init  ( -- )  initialize SPI and GD select signal
 \ gd2-sel               assert the GD2 SPI select signal
 \ gd2-unsel             deassert the GD2 SPI select signal
@@ -51,7 +51,7 @@
 \     1 GD.REG_ROTATE  GD.c!
 \     GD.480x272
 \ ;
-\ 
+\
 \ For other FT800/801 boards (e.g. FTDI's modules) then the hardware
 \ defaults are fine, so a simpler word can be used:
 \
@@ -59,85 +59,99 @@
 \     GD.crystal
 \     GD.480x272
 \ ;
-\ 
+\
 \ To set the custom word, give its xt to GD.setcustom *before*
 \ calling GD.init
-\ 
+\
 \ ' ftdi-eval GD.setcustom
 \
 
-hex
+variable model      \ set to 0 for FT800, 4 for FT81x
 
 \ FT800 is an SPI peripheral controlled by reads and writes
 \ into its internal 24-bit address space.
 
 \ Hardware registers
+\ The main difference between the FT800 and FT810 architecture
+\ is the register addresses.  Word gdconst hides this.
 
-00102400 constant GD.REG_ID
-00102404 constant GD.REG_FRAMES
-00102408 constant GD.REG_CLOCK
-0010240c constant GD.REG_FREQUENCY
-0010241c constant GD.REG_CPURESET
-00102428 constant GD.REG_HCYCLE
-0010242c constant GD.REG_HOFFSET
-00102430 constant GD.REG_HSIZE
-00102434 constant GD.REG_HSYNC0
-00102438 constant GD.REG_HSYNC1
-0010243c constant GD.REG_VCYCLE
-00102440 constant GD.REG_VOFFSET
-00102444 constant GD.REG_VSIZE
-00102448 constant GD.REG_VSYNC0
-0010244c constant GD.REG_VSYNC1
-00102450 constant GD.REG_DLSWAP
-00102454 constant GD.REG_ROTATE
-00102458 constant GD.REG_OUTBITS
-0010245c constant GD.REG_DITHER
-00102460 constant GD.REG_SWIZZLE
-00102464 constant GD.REG_CSPREAD
-00102468 constant GD.REG_PCLK_POL
-0010246c constant GD.REG_PCLK
-00102470 constant GD.REG_TAG_X
-00102474 constant GD.REG_TAG_Y
-00102478 constant GD.REG_TAG
-0010247c constant GD.REG_VOL_PB
-00102480 constant GD.REG_VOL_SOUND
-00102484 constant GD.REG_SOUND
-00102488 constant GD.REG_PLAY
-0010248c constant GD.REG_GPIO_DIR
-00102490 constant GD.REG_GPIO
-00102498 constant GD.REG_INT_FLAGS
-0010249c constant GD.REG_INT_EN
-001024a0 constant GD.REG_INT_MASK
-001024a4 constant GD.REG_PLAYBACK_START
-001024a8 constant GD.REG_PLAYBACK_LENGTH
-001024ac constant GD.REG_PLAYBACK_READPTR
-001024b0 constant GD.REG_PLAYBACK_FREQ
-001024b4 constant GD.REG_PLAYBACK_FORMAT
-001024b8 constant GD.REG_PLAYBACK_LOOP
-001024bc constant GD.REG_PLAYBACK_PLAY
-001024c0 constant GD.REG_PWM_HZ
-001024c4 constant GD.REG_PWM_DUTY
-001024c8 constant GD.REG_MACRO_0
-001024cc constant GD.REG_MACRO_1
-001024e4 constant GD.REG_CMD_READ
-001024e8 constant GD.REG_CMD_WRITE
-001024ec constant GD.REG_CMD_DL
-001024f0 constant GD.REG_TOUCH_MODE
-001024f4 constant GD.REG_TOUCH_ADC_MODE
-001024f8 constant GD.REG_TOUCH_CHARGE
-001024fc constant GD.REG_TOUCH_SETTLE
-00102500 constant GD.REG_TOUCH_OVERSAMPLE
-00102504 constant GD.REG_TOUCH_RZTHRESH
-00102508 constant GD.REG_TOUCH_RAW_XY
-0010250c constant GD.REG_TOUCH_RZ
-00102510 constant GD.REG_TOUCH_SCREEN_XY
-00102514 constant GD.REG_TOUCH_TAG_XY
-00102518 constant GD.REG_TOUCH_TAG
-0010251c constant GD.REG_TOUCH_TRANSFORM_A
-0010256c constant GD.REG_TRIM
-00102574 constant GD.REG_TOUCH_DIRECT_XY
-00102578 constant GD.REG_TOUCH_DIRECT_Z1Z2
-00109000 constant GD.REG_TRACKER
+: gdconst ( ft810-addr ft800-addr -- )
+    create  , ,
+    does>   model @ + @
+;
+
+hex
+
+302008 102408 gdconst GD.REG_CLOCK
+302100 1024ec gdconst GD.REG_CMD_DL
+3020f8 1024e4 gdconst GD.REG_CMD_READ
+3020fc 1024e8 gdconst GD.REG_CMD_WRITE
+302020 10241c gdconst GD.REG_CPURESET
+302068 102464 gdconst GD.REG_CSPREAD
+302060 10245c gdconst GD.REG_DITHER
+302054 102450 gdconst GD.REG_DLSWAP
+302004 102404 gdconst GD.REG_FRAMES
+30200c 10240c gdconst GD.REG_FREQUENCY
+302094 102490 gdconst GD.REG_GPIO
+302090 10248c gdconst GD.REG_GPIO_DIR
+30202c 102428 gdconst GD.REG_HCYCLE
+302030 10242c gdconst GD.REG_HOFFSET
+302034 102430 gdconst GD.REG_HSIZE
+302038 102434 gdconst GD.REG_HSYNC0
+30203c 102438 gdconst GD.REG_HSYNC1
+302000 102400 gdconst GD.REG_ID
+3020ac 10249c gdconst GD.REG_INT_EN
+3020a8 102498 gdconst GD.REG_INT_FLAGS
+3020b0 1024a0 gdconst GD.REG_INT_MASK
+3020d8 1024c8 gdconst GD.REG_MACRO_0
+3020dc 1024cc gdconst GD.REG_MACRO_1
+30205c 102458 gdconst GD.REG_OUTBITS
+302070 10246c gdconst GD.REG_PCLK
+30206c 102468 gdconst GD.REG_PCLK_POL
+30208c 102488 gdconst GD.REG_PLAY
+3020c4 1024b4 gdconst GD.REG_PLAYBACK_FORMAT
+3020c0 1024b0 gdconst GD.REG_PLAYBACK_FREQ
+3020b8 1024a8 gdconst GD.REG_PLAYBACK_LENGTH
+3020c8 1024b8 gdconst GD.REG_PLAYBACK_LOOP
+3020cc 1024bc gdconst GD.REG_PLAYBACK_PLAY
+3020bc 1024ac gdconst GD.REG_PLAYBACK_READPTR
+3020b4 1024a4 gdconst GD.REG_PLAYBACK_START
+3020d4 1024c4 gdconst GD.REG_PWM_DUTY
+3020d0 1024c0 gdconst GD.REG_PWM_HZ
+302058 102454 gdconst GD.REG_ROTATE
+302088 102484 gdconst GD.REG_SOUND
+302064 102460 gdconst GD.REG_SWIZZLE
+30207c 102478 gdconst GD.REG_TAG
+302074 102470 gdconst GD.REG_TAG_X
+302078 102474 gdconst GD.REG_TAG_Y
+302108 1024f4 gdconst GD.REG_TOUCH_ADC_MODE
+30210c 1024f8 gdconst GD.REG_TOUCH_CHARGE
+30218c 102574 gdconst GD.REG_TOUCH_DIRECT_XY
+302190 102578 gdconst GD.REG_TOUCH_DIRECT_Z1Z2
+302104 1024f0 gdconst GD.REG_TOUCH_MODE
+302114 102500 gdconst GD.REG_TOUCH_OVERSAMPLE
+30211c 102508 gdconst GD.REG_TOUCH_RAW_XY
+302120 10250c gdconst GD.REG_TOUCH_RZ
+302118 102504 gdconst GD.REG_TOUCH_RZTHRESH
+302124 102510 gdconst GD.REG_TOUCH_SCREEN_XY
+302110 1024fc gdconst GD.REG_TOUCH_SETTLE
+30212c 102518 gdconst GD.REG_TOUCH_TAG
+302128 102514 gdconst GD.REG_TOUCH_TAG_XY
+302150 10251c gdconst GD.REG_TOUCH_TRANSFORM_A
+309000 109000 gdconst GD.REG_TRACKER
+302180 10256c gdconst GD.REG_TRIM
+302040 10243c gdconst GD.REG_VCYCLE
+302044 102440 gdconst GD.REG_VOFFSET
+302080 10247c gdconst GD.REG_VOL_PB
+302084 102480 gdconst GD.REG_VOL_SOUND
+302048 102444 gdconst GD.REG_VSIZE
+30204c 102448 gdconst GD.REG_VSYNC0
+302050 10244c gdconst GD.REG_VSYNC1
+
+308000 108000 gdconst GD.RAM_CMD
+300000 100000 gdconst GD.RAM_DL
+
+102000 constant GD.RAM_PAL              \ Only applies to FT800
 
 \ 00000001 constant GD.CTOUCH_MODE_COMPATIBILITY
 \ 00000000 constant GD.CTOUCH_MODE_EXTENDED
@@ -240,41 +254,38 @@ c000 constant GD.OPT_NOHANDS
 
 \ 'instrument' argument to GD.play
 
-00 constant GD.SILENCE              
-01 constant GD.SQUAREWAVE           
-02 constant GD.SINEWAVE             
-03 constant GD.SAWTOOTH             
-04 constant GD.TRIANGLE             
-05 constant GD.BEEPING              
-06 constant GD.ALARM                
-07 constant GD.WARBLE               
-08 constant GD.CAROUSEL             
-40 constant GD.HARP                 
-41 constant GD.XYLOPHONE            
-42 constant GD.TUBA                 
-43 constant GD.GLOCKENSPIEL         
-44 constant GD.ORGAN                
-45 constant GD.TRUMPET              
-46 constant GD.PIANO                
-47 constant GD.CHIMES               
-48 constant GD.MUSICBOX             
-49 constant GD.BELL                 
-50 constant GD.CLICK                
-51 constant GD.SWITCH               
-52 constant GD.COWBELL              
-53 constant GD.NOTCH                
-54 constant GD.HIHAT                
-55 constant GD.KICKDRUM             
-56 constant GD.POP                  
-57 constant GD.CLACK                
-58 constant GD.CHACK                
-60 constant GD.MUTE                 
-61 constant GD.UNMUTE               
+00 constant GD.SILENCE
+01 constant GD.SQUAREWAVE
+02 constant GD.SINEWAVE
+03 constant GD.SAWTOOTH
+04 constant GD.TRIANGLE
+05 constant GD.BEEPING
+06 constant GD.ALARM
+07 constant GD.WARBLE
+08 constant GD.CAROUSEL
+40 constant GD.HARP
+41 constant GD.XYLOPHONE
+42 constant GD.TUBA
+43 constant GD.GLOCKENSPIEL
+44 constant GD.ORGAN
+45 constant GD.TRUMPET
+46 constant GD.PIANO
+47 constant GD.CHIMES
+48 constant GD.MUSICBOX
+49 constant GD.BELL
+50 constant GD.CLICK
+51 constant GD.SWITCH
+52 constant GD.COWBELL
+53 constant GD.NOTCH
+54 constant GD.HIHAT
+55 constant GD.KICKDRUM
+56 constant GD.POP
+57 constant GD.CLACK
+58 constant GD.CHACK
+60 constant GD.MUTE
+61 constant GD.UNMUTE
 : GD.PIPS 0f + ;
 
-00108000 constant GD.RAM_CMD
-00100000 constant GD.RAM_DL
-00102000 constant GD.RAM_PAL
 000ffffc constant GD.ROM_FONTROOT
 
 00000000 constant GD.TOUCHMODE_OFF
@@ -381,7 +392,7 @@ create inputs 18 allot  \ sampled touch inputs
 : mod4K
     4095 and
 ;
-    
+
 : getspace  ( -- u )    \ u is the space in the command FIFO
     4092
     wp @ GD.REG_CMD_READ GD.@
@@ -1136,7 +1147,7 @@ decimal
     GD.REG_VSIZE GD.@ 3 10 */
     30
     stream
-    GD.OPT_CENTERX s" please tap on the dot" GD.cmd_text 
+    GD.OPT_CENTERX s" please tap on the dot" GD.cmd_text
     GD.cmd_calibrate
     GD.finish
     GD.cmd_dlstart
@@ -1152,7 +1163,7 @@ decimal
 : GD.getinputs  \ collects touch input
     GD.finish
     unstream
-    inputs      4  GD.REG_TRACKER GD.move 
+    inputs      4  GD.REG_TRACKER GD.move
     inputs 4 +  13 GD.REG_TOUCH_RZ GD.move
     inputs 17 + 1  GD.REG_TAG GD.move
     stream
@@ -1189,6 +1200,8 @@ hex
     \     0 spix hex2.
     \     0 spix hex2.
     \ gd2-unsel
+
+    0c0001 GD.c@ 4 rshift cells model !
 
     080 GD.REG_GPIO_DIR     GD.c!
     080 GD.REG_GPIO         GD.c!
@@ -1267,7 +1280,14 @@ decimal
     stream
 ;
 
-: GD.wh  unstream GD.REG_HSIZE GD.@ GD.REG_VSIZE GD.@ stream ;
+: GD.wh ( -- w h ) \ size of the current screen
+    unstream
+    GD.REG_HSIZE GD.@ GD.REG_VSIZE GD.@
+    GD.REG_ROTATE GD.@ 2 and if     \ deal with landscape/portrait
+        swap
+    then
+    stream
+;
 
 \ FT800 memory access
 : GD.c!     unstream GD.c! stream ;
