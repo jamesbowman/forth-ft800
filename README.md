@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/jamesbowman/forth-ft800.svg?branch=master)](https://travis-ci.org/jamesbowman/forth-ft800)
 
 This is a Forth driver for the
-[FTDI FT800](http://www.ftdichip.com/Products/ICs/FT800.html) GPU, as
+[FTDI FT80x/FT81x](http://www.ftdichip.com/Products/ICs/FT800.html) GPUs, as
 used in many devices, including the
 [Gameduino 2](http://gameduino.com).
 
