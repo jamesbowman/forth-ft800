@@ -773,24 +773,44 @@ PUBLICWORDS
 ;
 : GD.SCISSORXY
     27 24 lshift
-\ y
-    swap 511 and
-    or
-\ x
-    swap 511 and
-    9 lshift
-    or
+    model @ 0= if
+    \ y
+        swap 511 and
+        or
+    \ x
+        swap 511 and
+        9 lshift
+        or
+    else
+    \ y
+        swap 2047 and
+        or
+    \ x
+        swap 2047 and
+        11 lshift
+        or
+    then
     >gd
 ;
 : GD.SCISSORSIZE
     28 24 lshift
-\ height
-    swap 1023 and
-    or
-\ width
-    swap 1023 and
-    10 lshift
-    or
+    model @ 0= if
+    \ height
+        swap 1023 and
+        or
+    \ width
+        swap 1023 and
+        10 lshift
+        or
+    else
+    \ height
+        swap 4095 and
+        or
+    \ width
+        swap 4095 and
+        12 lshift
+        or
+    then
     >gd
 ;
 : GD.CALL
@@ -1120,6 +1140,11 @@ hex
 
 : GD.cmd_translate  ( tx ty -- )
     027 cmd
+    ii
+;
+
+: GD.cmd_romfont
+    03f cmd
     ii
 ;
 
