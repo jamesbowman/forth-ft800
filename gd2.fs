@@ -128,8 +128,6 @@ hex
 30210c 1024f8 gdconst GD.REG_TOUCH_CHARGE
 30218c 102574 gdconst GD.REG_TOUCH_DIRECT_XY
 302190 102578 gdconst GD.REG_TOUCH_DIRECT_Z1Z2
-302104 1024f0 gdconst GD.REG_TOUCH_MODE
-302114 102500 gdconst GD.REG_TOUCH_OVERSAMPLE
 30211c 102508 gdconst GD.REG_TOUCH_RAW_XY
 302120 10250c gdconst GD.REG_TOUCH_RZ
 302118 102504 gdconst GD.REG_TOUCH_RZTHRESH
@@ -151,8 +149,11 @@ hex
 308000 108000 gdconst GD.RAM_CMD
 300000 100000 gdconst GD.RAM_DL
 
-102000 constant GD.RAM_PAL              \ Only applies to FT800
+102000 constant GD.RAM_PAL           \ Only applies to FT800
 
+\ These registers are not used often
+\ 302104 1024f0 gdconst GD.REG_TOUCH_MODE
+\ 302114 102500 gdconst GD.REG_TOUCH_OVERSAMPLE
 \ 00000001 constant GD.CTOUCH_MODE_COMPATIBILITY
 \ 00000000 constant GD.CTOUCH_MODE_EXTENDED
 
@@ -203,14 +204,15 @@ hex
 00000009 constant GD.TEXT8X8
 0000000a constant GD.TEXTVGA
 0000000b constant GD.BARGRAPH
+00000011 constant GD.L2
 
 00000002 constant GD.SRC_ALPHA
 00000003 constant GD.DST_ALPHA
 00000004 constant GD.ONE_MINUS_SRC_ALPHA
 00000005 constant GD.ONE_MINUS_DST_ALPHA
 
-00000000 constant GD.ADC_SINGLE_ENDED
-00000001 constant GD.ADC_DIFFERENTIAL
+\ 00000000 constant GD.ADC_SINGLE_ENDED
+\ 00000001 constant GD.ADC_DIFFERENTIAL
 
 \ 00000000 constant GD.DLSWAP_DONE
 \ 00000001 constant GD.DLSWAP_LINE
@@ -915,6 +917,57 @@ PUBLICWORDS
     >gd
 ;
 
+: GD.VERTEX_FORMAT
+    39 24 lshift
+\ frac
+    swap 7 and
+    or >gd
+;
+
+: GD.BITMAP_LAYOUT_H
+    40 24 lshift
+\ height
+    swap 3 and
+    or
+\ linestride
+    swap 3 and
+    2 lshift
+    or >gd
+;
+
+: GD.BITMAP_SIZE_H
+    41 24 lshift
+\ height
+    swap 3 and
+    or
+\ width
+    swap 3 and
+    2 lshift
+    or >gd
+;
+
+: GD.PALETTE_SOURCE
+    42 24 lshift
+\ addr
+    swap 4194303 and
+    or >gd
+;
+
+: GD.VERTEX_TRANSLATE_X
+    43 24 lshift
+\ x
+    swap 131071 and
+    or >gd
+;
+
+
+: GD.VERTEX_TRANSLATE_Y
+    44 24 lshift
+\ y
+    swap 131071 and
+    or >gd
+;
+
 \ #######   COPROCESSOR COMMANDS   ############################
 \
 \ These are higher-level FT800 commands, for drawing widgets etc.
@@ -1146,6 +1199,11 @@ hex
 : GD.cmd_romfont
     03f cmd
     ii
+;
+
+: GD.cmd_setbitmap
+    043 cmd
+    >r 2>r >gd 2r> r> 0 hhhh
 ;
 
 decimal
