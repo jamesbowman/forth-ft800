@@ -124,15 +124,12 @@ hex
 30207c 102478 gdconst GD.REG_TAG
 302074 102470 gdconst GD.REG_TAG_X
 302078 102474 gdconst GD.REG_TAG_Y
-302108 1024f4 gdconst GD.REG_TOUCH_ADC_MODE
-30210c 1024f8 gdconst GD.REG_TOUCH_CHARGE
 30218c 102574 gdconst GD.REG_TOUCH_DIRECT_XY
 302190 102578 gdconst GD.REG_TOUCH_DIRECT_Z1Z2
 30211c 102508 gdconst GD.REG_TOUCH_RAW_XY
 302120 10250c gdconst GD.REG_TOUCH_RZ
 302118 102504 gdconst GD.REG_TOUCH_RZTHRESH
 302124 102510 gdconst GD.REG_TOUCH_SCREEN_XY
-302110 1024fc gdconst GD.REG_TOUCH_SETTLE
 30212c 102518 gdconst GD.REG_TOUCH_TAG
 302128 102514 gdconst GD.REG_TOUCH_TAG_XY
 302150 10251c gdconst GD.REG_TOUCH_TRANSFORM_A
@@ -154,6 +151,9 @@ hex
 \ These registers are not used often
 \ 302104 1024f0 gdconst GD.REG_TOUCH_MODE
 \ 302114 102500 gdconst GD.REG_TOUCH_OVERSAMPLE
+\ 302108 1024f4 gdconst GD.REG_TOUCH_ADC_MODE
+\ 30210c 1024f8 gdconst GD.REG_TOUCH_CHARGE
+\ 302110 1024fc gdconst GD.REG_TOUCH_SETTLE
 \ 00000001 constant GD.CTOUCH_MODE_COMPATIBILITY
 \ 00000000 constant GD.CTOUCH_MODE_EXTENDED
 
@@ -356,13 +356,17 @@ LOCALWORDS
     gd2-unsel
 ;
 
-: hostcmd ( u -- )
+: hostcmd2 ( u0 u1 -- )
     gd2-sel
-        >spi
-    00 >spi
+    swap >spi
+    >spi
     00 >spi
     gd2-unsel
     60 ms
+;
+
+: hostcmd
+    0 hostcmd2
 ;
 
 : measureF ( -- u ) \ measure FT800's actual clock frequency
@@ -1268,8 +1272,6 @@ hex
     gd2-spi-init
     gd2-unsel
 
-    000 hostcmd         \ ACTIVE
-
     custom @ execute
 ;
 
@@ -1299,16 +1301,27 @@ hex
 ;
 
 : GD.nocrystal ( -- ) \ initialize the FT800 for no-crystal
-    062 hostcmd     \ CLK48M used for no-crystal parts like Gameduino2
+    000 hostcmd     \ ACTIVE
+    062 hostcmd     \ CLK48M: for no-crystal parts like GD2
     068 hostcmd     \ CORERST
     tune
     common-init
 ;
 
 : GD.crystal ( -- ) \ initialize the FT800 for external crystal
-    044 hostcmd     \ CLKEXT, use external crystal
+    000 hostcmd     \ ACTIVE
+    044 hostcmd     \ CLKEXT: use external crystal
     068 hostcmd     \ CORERST
     common-init
+;
+
+create plltab
+\   0       1X      2X      3X      4X      5X      6X
+    0 c,    001 c,  002 c,  003 c,  044 c,  045 c,  046 c,
+
+: GD.pll ( u -- ) 
+    042 hostcmd
+    061 swap plltab + c@ hostcmd2
 ;
 
 : GD.setcustom ( xt -- ) \ Set the custom initialization word
@@ -1364,7 +1377,7 @@ decimal
 ;
 
 : GD.wh ( -- w h ) \ size of the current screen
-    unstream
+    GD.finish unstream
     GD.REG_HSIZE GD.@ GD.REG_VSIZE GD.@
     GD.REG_ROTATE GD.@ 2 and if     \ deal with landscape/portrait
         swap
